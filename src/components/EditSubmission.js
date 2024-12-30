@@ -1,31 +1,50 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { buttonStyle, containerStyle } from '../styles/theme';
 
 function EditSubmission() {
-  const location = useLocation();
+  const { id } = useParams(); // Get ID from URL
   const navigate = useNavigate();
-  const submission = location.state?.submission;
-
-  const [formData, setFormData] = useState(submission || {
+  const [formData, setFormData] = useState({
     eventName: '',
-    eventDate: '',
     eventLocation: '',
+    eventDates: '',
     eventLink: '',
+    affiliations: '',
   });
 
+  // Fetch submission data for the given ID
+  useEffect(() => {
+    const submissions = JSON.parse(localStorage.getItem('submissions')) || [];
+    const submission = submissions.find((sub) => sub.id === parseInt(id));
+
+    if (submission) {
+      setFormData(submission); // Populate form with existing data
+    }
+  }, [id]);
+
+  // Handle Input Change
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
+  // Handle Form Submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Updated Submission:', formData);
+
+    const submissions = JSON.parse(localStorage.getItem('submissions')) || [];
+    const updatedSubmissions = submissions.map((sub) =>
+      sub.id === parseInt(id) ? { ...formData, id: parseInt(id) } : sub
+    );
+
+    localStorage.setItem('submissions', JSON.stringify(updatedSubmissions));
     alert('Submission updated successfully!');
-    navigate('/submission-history');
+    navigate('/submission-history'); // Redirect back to history
   };
 
   return (
-    <div style={formStyle}>
+    <div style={containerStyle}>
       <h2>Edit Submission</h2>
       <form onSubmit={handleSubmit}>
         <input
@@ -34,6 +53,7 @@ function EditSubmission() {
           placeholder="Event Name"
           value={formData.eventName}
           onChange={handleChange}
+          required
         />
         <input
           type="text"
@@ -41,13 +61,14 @@ function EditSubmission() {
           placeholder="Event Location"
           value={formData.eventLocation}
           onChange={handleChange}
+          required
         />
         <input
           type="date"
-          name="eventDate"
-          placeholder="Event Date"
-          value={formData.eventDate}
+          name="eventDates"
+          value={formData.eventDates}
           onChange={handleChange}
+          required
         />
         <input
           type="url"
@@ -55,20 +76,21 @@ function EditSubmission() {
           placeholder="Event Link"
           value={formData.eventLink}
           onChange={handleChange}
+          required
         />
-        <button type="submit">Save Changes</button>
+        <input
+          type="text"
+          name="affiliations"
+          placeholder="Affiliations/Partnerships"
+          value={formData.affiliations}
+          onChange={handleChange}
+        />
+        <button type="submit" style={{ ...buttonStyle, backgroundColor: '#28A745', color: '#fff' }}>
+          Update Submission
+        </button>
       </form>
     </div>
   );
 }
-
-const formStyle = {
-  maxWidth: '500px',
-  margin: '20px auto',
-  padding: '20px',
-  background: '#ffffff',
-  borderRadius: '10px',
-  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-};
 
 export default EditSubmission;

@@ -1,39 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { buttonStyle, containerStyle } from '../styles/theme';
 
 function SubmissionHistory() {
+  const [submissions, setSubmissions] = useState([]);
   const navigate = useNavigate();
-  const [submissions, setSubmissions] = useState([
-      ]);
 
+  // Fetch Submissions from Local Storage
+  useEffect(() => {
+    const storedSubmissions = JSON.parse(localStorage.getItem('submissions')) || [];
+    setSubmissions(storedSubmissions);
+  }, []);
+
+  // Handle Delete
   const handleDelete = (id) => {
-    setSubmissions(submissions.filter((submission) => submission.id !== id));
+    const updatedSubmissions = submissions.filter((sub) => sub.id !== id);
+    setSubmissions(updatedSubmissions);
+    localStorage.setItem('submissions', JSON.stringify(updatedSubmissions));
+    alert('Submission deleted successfully!');
   };
 
+  // Redirect to Edit Page
   const handleEdit = (id) => {
-    const submissionToEdit = submissions.find((submission) => submission.id === id);
-    navigate('/edit-submission', { state: { submission: submissionToEdit } });
+    navigate(`/edit-submission/${id}`); // Redirect with submission ID
   };
 
   return (
-    <div style={historyStyle}>
+    <div style={containerStyle}>
       <h2>Submission History</h2>
-      <table>
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
         <thead>
-          <tr>
+          <tr style={{ backgroundColor: '#007BFF', color: '#fff' }}>
             <th>Event Name</th>
-            <th>Event Date</th>
+            <th>Date</th>
+            <th>Location</th>
+            <th>Link</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {submissions.map((submission) => (
-            <tr key={submission.id}>
-              <td>{submission.eventName}</td>
-              <td>{submission.eventDate}</td>
+          {submissions.map((sub) => (
+            <tr key={sub.id} style={{ borderBottom: '1px solid #ddd' }}>
+              <td>{sub.eventName}</td>
+              <td>{sub.eventDates}</td>
+              <td>{sub.eventLocation}</td>
               <td>
-                <button onClick={() => handleEdit(submission.id)}>Edit</button>
-                <button onClick={() => handleDelete(submission.id)}>Delete</button>
+                <a href={sub.eventLink} target="_blank" rel="noopener noreferrer">
+                  View
+                </a>
+              </td>
+              <td>
+                <button onClick={() => handleEdit(sub.id)} style={buttonStyle}>
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(sub.id)}
+                  style={{ ...buttonStyle, backgroundColor: '#DC3545' }}
+                >
+                  Delete
+                </button>
               </td>
             </tr>
           ))}
@@ -42,10 +67,5 @@ function SubmissionHistory() {
     </div>
   );
 }
-
-const historyStyle = {
-  padding: '20px',
-  textAlign: 'center',
-};
 
 export default SubmissionHistory;

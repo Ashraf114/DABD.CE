@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { loginUser } from '../services/api';  // Corrected import path
 
 function Login() {
   const [credentials, setCredentials] = useState({
@@ -13,11 +14,34 @@ function Login() {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login Credentials:', credentials);
-    if (credentials.user_type === 'user') navigate('/user-dashboard');
-    else alert('Role not implemented yet.');
+    try {
+      const response = await loginUser({
+        username: credentials.username,
+        password: credentials.password
+      });
+      if (response.data.status) {
+        switch (credentials.user_type) {
+          case 'user':
+            navigate('/user-dashboard');
+            break;
+          case 'admin':
+            navigate('/admin-dashboard');
+            break;
+          case 'marketing':
+            navigate('/marketing-dashboard');
+            break;
+          default:
+            alert('Login Failed: Unknown role');
+        }
+      } else {
+        alert(response.data.message || 'Login failed!');
+      }
+    } catch (error) {
+      console.error('Error logging in:', error);
+      alert('An error occurred during login.');
+    }
   };
 
   return (
